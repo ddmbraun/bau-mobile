@@ -485,7 +485,7 @@ function openDetail(id){
     html+='<div class="sect open" data-sect="Termine"><div class="sect-head" onclick="toggleSect(this.parentElement)">Termine ('+termine.length+')</div><div class="sect-body">';
     html+='<table class="row-table"><thead><tr><th>Datum</th><th>Von</th><th>Bis</th><th>Beschreibung</th></tr></thead><tbody>';
     for(const t of termine){
-      html+='<tr><td>'+esc(t.datum||'')</td><td>'+esc(t.von||'')+'</td><td>'+esc(t.bis||'')+'</td><td>'+esc(t.beschreibung||'')+'</td></tr>';
+      html+='<tr><td>'+esc(t.datum||'')+'</td><td>'+esc(t.von||'')+'</td><td>'+esc(t.bis||'')+'</td><td>'+esc(t.beschreibung||'')+'</td></tr>';
     }
     html+='</tbody></table></div></div>';
   }
