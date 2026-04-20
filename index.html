@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0f1a14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BAU Mobile">
+<title>BAU Mobile</title>
+<style>
+:root{--bg:#0f1a14;--bg2:#1a2b1e;--bg3:#243328;--text:#e8f0ea;--text2:#90a898;--accent:#4ade80;--accent2:#86efac;--blue:#60a5fa;--orange:#fb923c;--red:#f87171;--border:#334539;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;height:100%;overflow:hidden}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.screen.hidden{display:none}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--border);min-height:56px;position:sticky;top:0;z-index:10}
+.hdr-title{flex:1;font-weight:700;font-size:16px;color:var(--accent2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hdr-btn{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;min-width:44px;min-height:40px;display:inline-flex;align-items:center;justify-content:center}
+
+/* ── LOGIN ── */
+#loginScreen{justify-content:center;align-items:center;padding:24px;text-align:center}
+#loginScreen h1{font-size:28px;margin:0 0 12px;color:var(--accent2)}
+#loginScreen p{color:var(--text2);margin:0 0 32px;max-width:320px;line-height:1.5}
+#loginBtn{background:var(--accent);color:#0f1a14;border:none;padding:16px 28px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer}
+#loginBtn:active{opacity:.85}
+.login-status{margin-top:16px;color:var(--text2);font-size:13px}
+
+/* ── STATUS TABS ── */
+.status-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.status-tabs::-webkit-scrollbar{display:none}
+.status-tab{background:var(--bg3);border:1.5px solid var(--border);color:var(--text2);padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;min-height:38px;transition:all .15s}
+.status-tab:active{transform:scale(.96)}
+.status-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(74,222,128,.12)}
+
+/* ── SEARCH ── */
+.search-bar{padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.search-bar input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;font-size:15px;outline:none}
+.search-bar input:focus{border-color:var(--accent)}
+
+/* ── AUFTRAG LISTE ── */
+.auftrag-list{flex:1;overflow-y:auto;padding:8px 10px 80px;-webkit-overflow-scrolling:touch}
+.auftrag-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.auftrag-card:active{background:var(--bg3)}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.card-ks{font-weight:700;font-size:15px;color:var(--accent2)}
+.card-datum{font-size:11px;color:var(--text2)}
+.card-adresse{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
+.card-hv{font-size:12px;color:var(--text2);margin-bottom:2px}
+.card-kontakt{font-size:12px;color:var(--text2);margin-bottom:6px}
+.card-schaden{font-size:12px;color:var(--text2);font-style:italic;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-bottom:8px}
+.card-footer{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--bg3);color:var(--text2)}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.empty{text-align:center;color:var(--text2);padding:40px 20px;font-size:14px}
+
+/* ── DETAIL ── */
+#detailScreen .hdr-title{font-size:14px;color:var(--text)}
+.detail-body{flex:1;overflow-y:auto;padding:12px 14px 100px;-webkit-overflow-scrolling:touch}
+.sect{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.sect-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;user-select:none;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
+.sect-head::after{content:'▸';transition:transform .15s;font-size:12px}
+.sect.open .sect-head::after{transform:rotate(90deg)}
+.sect-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.sect.open .sect-body{display:block}
+.dfield{margin-bottom:10px}
+.dfield:last-child{margin-bottom:0}
+.dfield label{display:block;font-size:11px;color:var(--text2);margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.dfield .val{font-size:14px;color:var(--text);line-height:1.4;padding:8px 10px;background:var(--bg3);border-radius:6px;word-break:break-word}
+.dfield .val.offen{color:var(--text2);font-style:italic}
+.dfield .val a.tel{color:var(--accent);display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:600;text-decoration:none}
+.dfield .val a.mail{color:var(--blue);text-decoration:none}
+.dfield .val a.maps{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.detail-status-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.detail-status-badge{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid var(--border);background:var(--bg3)}
+
+/* ── TERMIN / ZEIT TABELLE ── */
+.row-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:6px}
+.row-table th{text-align:left;padding:4px 6px;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.4px;font-weight:600;border-bottom:1px solid var(--border)}
+.row-table td{padding:6px;border-bottom:1px solid var(--bg3);color:var(--text)}
+.row-table tr:last-child td{border-bottom:none}
+.zeit-gesamt{text-align:right;font-size:12px;font-weight:600;color:var(--accent2);padding:4px 6px}
+
+/* ── ANHANG / README ── */
+.readme-bar{display:flex;align-items:center;gap:8px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.readme-bar span{flex:1;font-size:12px;color:var(--text2)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg2);color:var(--text);padding:12px 20px;border-radius:10px;border:1px solid var(--border);z-index:100;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.4);white-space:nowrap}
+
+/* ── EINSTELLUNGEN ── */
+.settings-body{flex:1;overflow-y:auto;padding:12px 14px}
+.info-row{padding:10px 12px;background:var(--bg3);border-radius:8px;font-size:13px;color:var(--text2);margin-bottom:8px}
+.action-btn{width:100%;padding:13px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);display:flex;align-items:center;gap:10px}
+.action-btn.danger{border-color:var(--red);color:var(--red);background:rgba(248,113,113,.08)}
+
+.hide{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen" class="screen">
+  <h1>&#127959; BAU Mobile</h1>
+  <p>Lese-Ansicht f&#252;r die BAU-Doku.<br>Nutzt denselben Google Drive-Account wie BAU-Doku am Desktop.</p>
+  <button id="loginBtn" onclick="gdriveLogin()">&#128274; Mit Google anmelden</button>
+  <div class="login-status" id="loginStatus"></div>
+</div>
+
+<!-- ══ LISTE ══ -->
+<div id="listScreen" class="screen hidden">
+  <div class="hdr">
+    <div class="hdr-title">&#127959; BAU Mobile</div>
+    <button class="hdr-btn" onclick="refreshData()" title="Neu laden">&#128260;</button>
+    <button class="hdr-btn" onclick="openSettings()" title="Einstellungen">&#9881;&#65039;</button>
+  </div>
+  <div class="status-tabs" id="statusTabs"></div>
+  <div class="search-bar">
+    <input type="search" id="searchInput" placeholder="&#128269; Suche KS, Adresse, Mieter, Schaden…" oninput="renderList()">
+  </div>
+  <div class="auftrag-list" id="auftragList"></div>
+</div>
+
+<!-- ══ DETAIL ══ -->
+<div id="detailScreen" class="screen hidden">
+  <div class="hdr">
+    <button class="hdr-btn" onclick="closeDetail()">&#8592;</button>
+    <div class="hdr-title" id="detailTitle">Auftrag</div>
+    <span style="font-size:11px;color:var(--text2);padding:4px 8px;background:var(--bg3);border-radius:6px">Nur Lesen</span>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<!-- ══ EINSTELLUNGEN ══ -->
+<div id="settingsScreen" class="screen hidden">
+  <div class="hdr">
+    <button class="hdr-btn" onclick="closeSettings()">&#8592;</button>
+    <div class="hdr-title">Einstellungen</div>
+  </div>
+  <div class="settings-body">
+    <div class="info-row" id="settFileName">—</div>
+    <div class="info-row" id="settUserEmail" style="color:var(--text2);font-size:12px">—</div>
+    <button class="action-btn" onclick="refreshData();closeSettings()">&#128260; Daten neu laden</button>
+    <button class="action-btn danger" onclick="logout()">&#128682; Abmelden</button>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+/* ══ BAU Mobile — read-only Ansicht für bau_auftraege.json ══ */
+const GDRIVE_CLIENT_ID='56419258975-2ri3eujer9p6saph1mesa5hihlcae1pl.apps.googleusercontent.com';
+const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+const WORKSPACE_FOLDER_NAME='PTP-BAU Daten';
+const TOKEN_KEY='baum_token';
+
+// ── STATE ──
+let gdriveToken=null;
+let gdriveTokenExpires=0;
+let gdriveTokenClient=null;
+let bauFileId=null;
+let workspaceFolderId=localStorage.getItem('workspace_folder_id')||null;
+let userEmail='';
+let auftraege=[];
+let statusConfig=[
+  {key:'neu',label:'🔵 Neu'},
+  {key:'bearbeitung',label:'🟠 In Bearbeitung'},
+  {key:'abgeschlossen',label:'🟢 Abgeschlossen'}
+];
+let hvListe=[];
+let activeFilter='alle';
+let currentAuftragId=null;
+let pollTimer=null;
+let lastModified=null;
+
+// ── UTILS ──
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
+
+// ── AUTH ──
+function gdriveLogin(){
+  initTokenClient();
+  if(!gdriveTokenClient){document.getElementById('loginStatus').textContent='Google-Dienst noch nicht geladen, bitte kurz warten…';return;}
+  gdriveTokenClient.requestAccessToken({prompt:'consent'});
+}
+function initTokenClient(){
+  if(gdriveTokenClient)return;
+  if(!window.google||!window.google.accounts||!window.google.accounts.oauth2)return;
+  gdriveTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:GDRIVE_CLIENT_ID,scope:GDRIVE_SCOPE,callback:onTokenResponse
+  });
+}
+function onTokenResponse(resp){
+  if(resp.error){document.getElementById('loginStatus').textContent='Fehler: '+resp.error;return;}
+  gdriveToken=resp.access_token;
+  gdriveTokenExpires=Date.now()+(Number(resp.expires_in||3600)-60)*1000;
+  try{localStorage.setItem(TOKEN_KEY,JSON.stringify({token:gdriveToken,exp:gdriveTokenExpires}));}catch(e){}
+  afterLogin();
+}
+async function afterLogin(){
+  try{
+    const r=await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+gdriveToken}});
+    if(r.ok){const j=await r.json();userEmail=j.email||'';}
+  }catch(e){}
+  await ensureWorkspaceFolder();
+  await findBauFile();
+}
+function tokenValid(){return gdriveToken&&Date.now()<gdriveTokenExpires;}
+function tryRestoreToken(){
+  try{
+    const s=localStorage.getItem(TOKEN_KEY);
+    if(!s)return false;
+    const p=JSON.parse(s);
+    if(p&&p.token&&p.exp&&Date.now()<p.exp-5000){
+      gdriveToken=p.token;gdriveTokenExpires=p.exp;return true;
+    }
+  }catch(e){}
+  return false;
+}
+function logout(){
+  gdriveToken=null;gdriveTokenExpires=0;
+  try{localStorage.removeItem(TOKEN_KEY);}catch(e){}
+  bauFileId=null;auftraege=[];
+  hide('settingsScreen');hide('listScreen');hide('detailScreen');
+  show('loginScreen');
+  if(pollTimer)clearInterval(pollTimer);pollTimer=null;
+}
+
+// ── WORKSPACE FOLDER ──
+async function ensureWorkspaceFolder(){
+  if(workspaceFolderId)return;
+  const q=encodeURIComponent("name='"+WORKSPACE_FOLDER_NAME+"' and mimeType='application/vnd.google-apps.folder' and trashed=false");
+  try{
+    const r=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id)',
+      {headers:{Authorization:'Bearer '+gdriveToken}});
+    if(!r.ok)return;
+    const d=await r.json();
+    if(d.files&&d.files.length){
+      workspaceFolderId=d.files[0].id;
+      localStorage.setItem('workspace_folder_id',workspaceFolderId);
+    }
+  }catch(e){}
+}
+
+// ── DATEI LADEN ──
+async function findBauFile(){
+  document.getElementById('loginStatus').textContent='Suche bau_auftraege.json…';
+  try{
+    let q="name='bau_auftraege.json' and mimeType='application/json' and trashed=false";
+    if(workspaceFolderId)q+=" and '"+workspaceFolderId+"' in parents";
+    const r=await fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name,modifiedTime)&orderBy=modifiedTime%20desc',
+      {headers:{Authorization:'Bearer '+gdriveToken}});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const d=await r.json();
+    const files=d.files||[];
+    // Fallback ohne Ordnerfilter
+    let chosenFile=files[0]||null;
+    if(!chosenFile&&workspaceFolderId){
+      const r2=await fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent("name='bau_auftraege.json' and mimeType='application/json' and trashed=false")+'&fields=files(id,name,modifiedTime)&orderBy=modifiedTime%20desc',
+        {headers:{Authorization:'Bearer '+gdriveToken}});
+      if(r2.ok){const d2=await r2.json();chosenFile=(d2.files||[])[0]||null;}
+    }
+    if(!chosenFile){
+      document.getElementById('loginStatus').textContent='Keine bau_auftraege.json in Google Drive gefunden. Bitte zuerst BAU-Doku am Desktop öffnen und mit Drive verbinden.';
+      return;
+    }
+    bauFileId=chosenFile.id;
+    await loadBauFile();
+    hide('loginScreen');
+    show('listScreen');
+    startPolling();
+  }catch(e){
+    document.getElementById('loginStatus').textContent='Fehler: '+e.message;
+  }
+}
+
+async function loadBauFile(){
+  if(!bauFileId||!gdriveToken)return;
+  const r=await fetch('https://www.googleapis.com/drive/v3/files/'+bauFileId+'?alt=media&_='+Date.now(),
+    {headers:{Authorization:'Bearer '+gdriveToken,'Cache-Control':'no-cache'},cache:'no-store'});
+  if(!r.ok)throw new Error('Laden fehlgeschlagen: HTTP '+r.status);
+  const data=await r.json();
+  loadFromObject(data);
+  // modifiedTime merken
+  try{
+    const mr=await fetch('https://www.googleapis.com/drive/v3/files/'+bauFileId+'?fields=modifiedTime',
+      {headers:{Authorization:'Bearer '+gdriveToken}});
+    if(mr.ok){const m=await mr.json();lastModified=m.modifiedTime;}
+  }catch(e){}
+}
+
+function loadFromObject(data){
+  if(!data)return;
+  auftraege=(data.auftraege||[]);
+  if(Array.isArray(data.statusConfig)&&data.statusConfig.length)statusConfig=data.statusConfig;
+  if(Array.isArray(data.hvListe))hvListe=data.hvListe;
+  renderStatusTabs();
+  renderList();
+}
+
+async function refreshData(){
+  if(!bauFileId||!gdriveToken){toast('Nicht verbunden');return;}
+  try{
+    await loadBauFile();
+    toast('✅ Aktualisiert');
+  }catch(e){toast('⚠ Fehler: '+e.message);}
+}
+
+// ── POLLING ──
+async function pollFile(){
+  if(!bauFileId||!gdriveToken)return;
+  if(document.getElementById('detailScreen')&&!document.getElementById('detailScreen').classList.contains('hidden'))return;
+  try{
+    const mr=await fetch('https://www.googleapis.com/drive/v3/files/'+bauFileId+'?fields=modifiedTime&_='+Date.now(),
+      {headers:{Authorization:'Bearer '+gdriveToken},cache:'no-store'});
+    if(!mr.ok)return;
+    const meta=await mr.json();
+    if(!lastModified){lastModified=meta.modifiedTime;return;}
+    if(meta.modifiedTime===lastModified)return;
+    await loadBauFile();
+    lastModified=meta.modifiedTime;
+  }catch(e){}
+}
+function startPolling(){
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(pollFile,10000);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pollFile();},{once:false});
+}
+
+// ── RENDER STATUS TABS ──
+function renderStatusTabs(){
+  const bar=document.getElementById('statusTabs');
+  if(!bar)return;
+  const alleCount=auftraege.length;
+  let html='<button class="status-tab'+(activeFilter==='alle'?' active':'')+'" onclick="setFilter(\'alle\')">Alle ('+alleCount+')</button>';
+  for(const sc of statusConfig){
+    const n=auftraege.filter(a=>a.status===sc.key).length;
+    html+='<button class="status-tab'+(activeFilter===sc.key?' active':'')+'" onclick="setFilter(\''+sc.key+'\')">'+esc(sc.label)+' ('+n+')</button>';
+  }
+  bar.innerHTML=html;
+}
+function setFilter(key){
+  activeFilter=key;
+  renderStatusTabs();
+  renderList();
+}
+
+// ── RENDER LISTE ──
+function renderList(){
+  const q=(document.getElementById('searchInput')||{}).value||'';
+  const qLow=q.toLowerCase().trim();
+  const filtered=auftraege.filter(a=>{
+    if(activeFilter!=='alle'&&a.status!==activeFilter)return false;
+    if(!qLow)return true;
+    const suchtext=[a.ks,a.adresse,a.strasse,a.ort,a.hv,a.mieterName,a.eigentuemer,a.schaden,a.rep]
+      .concat((a.kontakte||[]).map(k=>k.name+' '+k.tel)).join(' ').toLowerCase();
+    return suchtext.includes(qLow);
+  });
+  const container=document.getElementById('auftragList');
+  if(!container)return;
+  if(!filtered.length){
+    container.innerHTML='<div class="empty">Keine Aufträge gefunden</div>';
+    return;
+  }
+  const sc=getStatusConfig();
+  container.innerHTML=filtered.map(a=>{
+    const adresse=a.adresse||[(a.strasse||''),(a.ort||'')].filter(Boolean).join(', ');
+    const status=sc[a.status]||{label:a.status||'—',color:'#888'};
+    const kontaktInfo=getKontaktInfo(a);
+    return '<div class="auftrag-card" onclick="openDetail(\''+esc(a.id)+'\')">'
+      +'<div class="card-head"><span class="card-ks">'+esc(a.ks||'—')+'</span><span class="card-datum">'+esc(formatDatum(a.datum||a.createdAt))+'</span></div>'
+      +(adresse?'<div class="card-adresse">'+esc(adresse)+'</div>':'')
+      +(a.hv?'<div class="card-hv">🏢 '+esc(a.hv)+'</div>':'')
+      +(kontaktInfo?'<div class="card-kontakt">'+esc(kontaktInfo)+'</div>':'')
+      +(a.schaden?'<div class="card-schaden">'+esc(a.schaden)+'</div>':'')
+      +'<div class="card-footer">'
+      +'<span class="status-badge"><span class="status-dot" style="background:'+status.color+'"></span>'+esc(status.label)+'</span>'
+      +(a.rep?'<span class="status-badge">'+esc(a.rep)+'</span>':'')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function getKontaktInfo(a){
+  if(a.kontakte&&a.kontakte.length){
+    const m=a.kontakte.find(k=>k.rolle==='mieter');
+    if(m&&m.name)return '👤 '+m.name+(m.tel?' · '+m.tel:'');
+    return '';
+  }
+  if(a.mieterName)return '👤 '+a.mieterName+(a.mieterTel?' · '+a.mieterTel:'');
+  return '';
+}
+
+function formatDatum(d){
+  if(!d)return '';
+  try{
+    const dt=new Date(d);
+    if(isNaN(dt))return d;
+    return dt.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  }catch(e){return d;}
+}
+
+function getStatusConfig(){
+  const map={};
+  const farben={neu:'#60a5fa',bearbeitung:'#fb923c',abgeschlossen:'#4ade80'};
+  for(const sc of statusConfig){
+    map[sc.key]={label:sc.label,color:farben[sc.key]||'#9090a8'};
+  }
+  return map;
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  const a=auftraege.find(x=>x.id===id);
+  if(!a)return;
+  currentAuftragId=id;
+  const sc=getStatusConfig();
+  const status=sc[a.status]||{label:a.status||'—',color:'#888'};
+  const adresse=a.adresse||[(a.strasse||''),(a.ort||'')].filter(Boolean).join(', ');
+  const titel=(a.ks?a.ks+' — ':'')+adresse;
+  document.getElementById('detailTitle').textContent=titel||'Auftrag';
+
+  const termine=(a.termine||[]).filter(t=>t.datum||t.von||t.beschreibung);
+  const zeiten=(a.zeiterfassung||[]).filter(z=>z.datum||z.von);
+  const anhaenge=(a.anhaenge||[]);
+  const kontakte=(a.kontakte||[]);
+  const hasMieter=kontakte.some(k=>k.rolle==='mieter')||(a.mieterName||a.mieterTel||a.mieterEmail);
+  const hasEig=kontakte.some(k=>k.rolle==='eigentuemer')||(a.eigentuemer||a.eigTel||a.eigEmail);
+
+  let html='';
+
+  // Status-Zeile
+  html+='<div class="detail-status-bar">'
+    +'<span class="detail-status-badge" style="border-color:'+status.color+';color:'+status.color+'"><span class="status-dot" style="background:'+status.color+'"></span>'+esc(status.label)+'</span>'
+    +'</div>';
+
+  // Readme
+  if(a.readmePfad){
+    html+='<div class="readme-bar"><span>📋 Auftragsakte: <code>'+esc(a.readmePfad)+'</code></span></div>';
+  }
+
+  // Stammdaten
+  html+='<div class="sect open" data-sect="Stammdaten">'
+    +'<div class="sect-head" onclick="toggleSect(this.parentElement)">Stammdaten</div>'
+    +'<div class="sect-body">'
+    +'<div class="detail-grid">'
+    +fieldHtml('KS-Nummer',a.ks)
+    +fieldHtml('Datum',formatDatum(a.datum))
+    +'</div>'
+    +fieldHtml('Adresse',adresse,true,'<a class="maps" href="https://maps.google.com/?q='+encodeURIComponent(adresse)+'" target="_blank">🗺 Maps</a>')
+    +fieldHtml('HV',a.hv)
+    +fieldHtml('Schadensbild',a.schaden,true)
+    +fieldHtml('Reparatur / Gewerk',a.rep)
+    +'</div></div>';
+
+  // Kontakte
+  if(hasMieter||hasEig){
+    html+='<div class="sect open" data-sect="Kontakte"><div class="sect-head" onclick="toggleSect(this.parentElement)">Kontakte</div><div class="sect-body">';
+    if(kontakte.length){
+      for(const k of kontakte){
+        const roleLabel={mieter:'Mieter',eigentuemer:'Eigentümer',verwalter:'Verwalter',handwerker:'Handwerker'}[k.rolle]||k.rolle;
+        html+='<div class="dfield"><label>'+esc(roleLabel)+'</label><div class="val">';
+        if(k.name)html+=esc(k.name)+'<br>';
+        if(k.tel)html+='<a class="tel" href="tel:'+esc(k.tel)+'">📞 '+esc(k.tel)+'</a><br>';
+        if(k.email)html+='<a class="mail" href="mailto:'+esc(k.email)+'">✉ '+esc(k.email)+'</a>';
+        html+='</div></div>';
+      }
+    }else{
+      if(a.mieterName||a.mieterTel){
+        html+='<div class="dfield"><label>Mieter</label><div class="val">'+(a.mieterName?esc(a.mieterName)+'<br>':'')+(a.mieterTel?'<a class="tel" href="tel:'+esc(a.mieterTel)+'">📞 '+esc(a.mieterTel)+'</a>':'')+'</div></div>';
+      }
+      if(a.eigentuemer||a.eigTel){
+        html+='<div class="dfield"><label>Eigentümer</label><div class="val">'+(a.eigentuemer?esc(a.eigentuemer)+'<br>':'')+(a.eigTel?'<a class="tel" href="tel:'+esc(a.eigTel)+'">📞 '+esc(a.eigTel)+'</a>':'')+'</div></div>';
+      }
+    }
+    html+='</div></div>';
+  }
+
+  // Termine
+  if(termine.length){
+    html+='<div class="sect open" data-sect="Termine"><div class="sect-head" onclick="toggleSect(this.parentElement)">Termine ('+termine.length+')</div><div class="sect-body">';
+    html+='<table class="row-table"><thead><tr><th>Datum</th><th>Von</th><th>Bis</th><th>Beschreibung</th></tr></thead><tbody>';
+    for(const t of termine){
+      html+='<tr><td>'+esc(t.datum||'')</td><td>'+esc(t.von||'')+'</td><td>'+esc(t.bis||'')+'</td><td>'+esc(t.beschreibung||'')+'</td></tr>';
+    }
+    html+='</tbody></table></div></div>';
+  }
+
+  // Zeiterfassung
+  if(zeiten.length){
+    let totalMin=0;
+    for(const z of zeiten){
+      if(z.von&&z.bis){try{const[vh,vm]=z.von.split(':').map(Number);const[bh,bm]=z.bis.split(':').map(Number);const d=(bh*60+bm)-(vh*60+vm);if(d>0)totalMin+=d;}catch(e){}}
+    }
+    const h=Math.floor(totalMin/60),m=totalMin%60;
+    html+='<div class="sect" data-sect="Zeit"><div class="sect-head" onclick="toggleSect(this.parentElement)">Zeiterfassung ('+zeiten.length+')</div><div class="sect-body">';
+    html+='<table class="row-table"><thead><tr><th>Datum</th><th>Von</th><th>Bis</th><th>Beschreibung</th></tr></thead><tbody>';
+    for(const z of zeiten){
+      html+='<tr><td>'+esc(z.datum||'')+'</td><td>'+esc(z.von||'')+'</td><td>'+esc(z.bis||'')+'</td><td>'+esc(z.beschreibung||'')+'</td></tr>';
+    }
+    html+='</tbody></table>';
+    if(totalMin>0)html+='<div class="zeit-gesamt">Gesamt: '+h+'h '+m+'min</div>';
+    html+='</div></div>';
+  }
+
+  // Anhänge
+  if(anhaenge.length){
+    html+='<div class="sect" data-sect="Anhänge"><div class="sect-head" onclick="toggleSect(this.parentElement)">Anhänge ('+anhaenge.length+')</div><div class="sect-body">';
+    for(const anh of anhaenge){
+      const isImg=anh.type&&anh.type.startsWith('image/');
+      html+='<div class="dfield"><div class="val">'+esc(anh.name||'Anhang')+(anh.size?' ('+fmtBytes(anh.size)+')':'')+'</div></div>';
+    }
+    html+='</div></div>';
+  }
+
+  // Notizen
+  if(a.notizen){
+    html+='<div class="sect" data-sect="Notizen"><div class="sect-head" onclick="toggleSect(this.parentElement)">Notizen</div><div class="sect-body">';
+    html+=fieldHtml('',a.notizen,true);
+    html+='</div></div>';
+  }
+
+  document.getElementById('detailBody').innerHTML=html;
+  hide('listScreen');
+  show('detailScreen');
+}
+
+function fieldHtml(label,val,full,extra){
+  const v=val?String(val).trim():'';
+  return '<div class="dfield'+(full?' full':'')+'"><label>'+esc(label)+'</label>'
+    +'<div class="val'+(v?'':' offen')+'">'+(v?esc(v):'—')+(extra?'<br>'+extra:'')+'</div></div>';
+}
+
+function fmtBytes(b){if(b<1024)return b+'B';if(b<1048576)return (b/1024).toFixed(1)+'KB';return (b/1048576).toFixed(1)+'MB';}
+
+function toggleSect(el){if(!el)return;el.classList.toggle('open');}
+
+function closeDetail(){
+  currentAuftragId=null;
+  hide('detailScreen');
+  show('listScreen');
+}
+
+// ── EINSTELLUNGEN ──
+function openSettings(){
+  const fn=document.getElementById('settFileName');
+  const em=document.getElementById('settUserEmail');
+  if(fn)fn.textContent=bauFileId?'☁️ bau_auftraege.json':'Nicht verbunden';
+  if(em)em.textContent=userEmail||'—';
+  hide('listScreen');
+  show('settingsScreen');
+}
+function closeSettings(){
+  hide('settingsScreen');
+  show('listScreen');
+}
+
+// ── INIT ──
+window.addEventListener('load',()=>{
+  // Versuche gespeichertes Token zu nutzen
+  if(tryRestoreToken()){
+    afterLogin();
+  } else {
+    // Warte bis GIS geladen ist
+    const checkGIS=setInterval(()=>{
+      if(window.google&&window.google.accounts){
+        clearInterval(checkGIS);
+        initTokenClient();
+      }
+    },200);
+  }
+});
+</script>
+</body>
+</html>
