@@ -113,12 +113,16 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .timer-btn{padding:6px 16px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-size:14px;min-height:34px}
 .timer-btn.start{background:var(--accent);color:white}
 .timer-btn.stop{background:var(--orange);color:white}
-.qa-toggle{background:rgba(0,0,0,.08);border:none;border-radius:8px;width:34px;min-height:34px;font-size:20px;font-weight:400;cursor:pointer;color:var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;line-height:1}
+.qa-toggle{background:rgba(0,0,0,.08);border:none;border-radius:8px;width:36px;height:36px;font-size:22px;font-weight:300;cursor:pointer;color:var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .2s;line-height:1}
 .qa-toggle.open{transform:rotate(45deg);background:var(--orange);color:white}
-.qa-row-extra{display:none;gap:6px;padding:4px 0 2px}
+.qa-row-extra{display:none;gap:8px;padding:6px 0 2px}
 .qa-row-extra.open{display:flex}
-.qa-action-btn{flex:1;padding:9px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px}
-.qa-action-btn span.qa-lbl{font-size:10px;font-weight:500;color:var(--text2)}
+@keyframes qaPop{0%{opacity:0;transform:translateY(-10px) scale(.8)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.qa-row-extra.open .qa-action-btn:nth-child(1){animation:qaPop .22s .00s cubic-bezier(.34,1.56,.64,1) both}
+.qa-row-extra.open .qa-action-btn:nth-child(2){animation:qaPop .22s .06s cubic-bezier(.34,1.56,.64,1) both}
+.qa-row-extra.open .qa-action-btn:nth-child(3){animation:qaPop .22s .12s cubic-bezier(.34,1.56,.64,1) both}
+.qa-action-btn{flex:1;padding:11px 6px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);font-size:22px;font-weight:600;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px;min-width:0}
+.qa-action-btn span.qa-lbl{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap}
 .qa-notiz-row{display:none;gap:6px;padding:2px 0 4px}
 .qa-notiz-row.open{display:flex}
 /* ── FOTOS ── */
@@ -2226,9 +2230,8 @@ function renderDetail(t){
       const ts=_loadTimerState();
       const savedDesc=(ts&&ts.taskId===t.id?ts.beschreibung:'')||'';
       return '<div id="timerBar" class="timer-bar top'+(running?' running':'')+'" style="flex-direction:column;gap:6px;">'
-        +'<div style="display:flex;gap:8px;align-items:stretch;width:100%;min-height:44px;">'
-          +'<div id="timerDisplay" class="timer-display'+(running?' running':'')+'">'+formatTimerFor(t.id)+'</div>'
-          +'<button id="timerBtn" class="timer-btn '+(running?'stop':'start')+'" onclick="toggleMobileTimer(\''+escAttr(t.id)+'\')" style="flex-shrink:0;">'+(running?'⏹ Stopp':'▶ Start')+'</button>'
+        +'<div style="display:flex;align-items:center;gap:8px;width:100%;">'
+          +'<div id="timerDisplay" class="timer-display'+(running?' running':'')+'" style="flex:1;min-width:0;">'+formatTimerFor(t.id)+'</div>'
           +'<button id="qaToggleBtn" class="qa-toggle" onclick="toggleQuickActions()" title="Schnellaktionen">+</button>'
         +'</div>'
         +'<div id="qaRowExtra" class="qa-row-extra">'
@@ -2237,9 +2240,10 @@ function renderDetail(t){
           +'<button class="qa-action-btn" id="qaNotizBtn" onclick="toggleQuickNotiz()">✏️<span class="qa-lbl">Notiz</span></button>'
         +'</div>'
         +'<div id="qaNotizRow" class="qa-notiz-row">'
-          +'<input type="text" id="qaNotizInput" placeholder="Schnellnotiz…" maxlength="200" autocomplete="off" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;min-height:40px;" onkeydown="if(event.key===\'Enter\')addQuickNotiz()">'
-          +'<button onclick="addQuickNotiz()" style="padding:8px 14px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:13px;font-weight:600;cursor:pointer;min-height:40px;">✓</button>'
+          +'<input type="text" id="qaNotizInput" placeholder="Schnellnotiz…" maxlength="200" autocomplete="off" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;min-height:44px;" onkeydown="if(event.key===\'Enter\')addQuickNotiz()">'
+          +'<button onclick="addQuickNotiz()" style="padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;">✓</button>'
         +'</div>'
+        +'<button id="timerBtn" class="timer-btn '+(running?'stop':'start')+'" onclick="toggleMobileTimer(\''+escAttr(t.id)+'\')" style="width:100%;">'+(running?'⏹ Stopp':'▶ Start')+'</button>'
         +'<input id="timerDesc" type="text" placeholder="Tätigkeitsbeschreibung vor dem Start eingeben…" maxlength="120"'
           +(running?' disabled':'')
           +' value="'+escAttr(savedDesc)+'"'
