@@ -105,26 +105,34 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .save-indicator.saved{color:var(--green)}
 .save-indicator.error{color:var(--red)}
 /* ── TIMER ── */
-.timer-bar{display:flex;gap:8px;align-items:center;padding:7px 14px;background:#E8ECFF;border:1px solid var(--accent);border-radius:10px;margin-bottom:10px}
+.timer-bar{display:flex;flex-direction:column;gap:7px;padding:10px 12px;background:#E8ECFF;border:1.5px solid var(--accent);border-radius:12px;margin-bottom:10px;width:100%;box-sizing:border-box}
 .timer-bar.running{background:#FFF0DC;border-color:var(--orange)}
-.timer-bar.top{position:sticky;top:0;z-index:5;margin:0 0 12px;border-width:2px;box-shadow:0 2px 8px rgba(0,0,0,.12)}
-.timer-display{flex:1;font-family:'SF Mono',Consolas,monospace;font-size:20px;font-weight:600;letter-spacing:2px}
-.timer-display.running{color:var(--orange)}
-.timer-btn{padding:6px 16px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-size:14px;min-height:34px}
+.timer-bar.top{position:sticky;top:0;z-index:5;margin:0 0 12px;border-width:2px;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+.timer-top-row{display:flex;align-items:center;gap:8px;width:100%}
+.timer-display{flex:0 0 65%;font-family:'SF Mono',Consolas,monospace;font-size:26px;font-weight:700;letter-spacing:2px;color:#1a1a2e;line-height:1.1;min-width:0;overflow:hidden}
+.timer-bar.running .timer-display{color:#b45309}
+.timer-btn{flex:1;padding:0;border-radius:9px;font-weight:700;border:none;cursor:pointer;font-size:14px;height:44px;min-width:0}
 .timer-btn.start{background:var(--accent);color:white}
 .timer-btn.stop{background:var(--orange);color:white}
-.qa-toggle{background:rgba(0,0,0,.08);border:none;border-radius:8px;width:36px;height:36px;font-size:22px;font-weight:300;cursor:pointer;color:var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .25s cubic-bezier(.34,1.56,.64,1),background .2s;line-height:1}
+.qa-toggle{flex:0 0 44px;height:44px;background:rgba(0,0,0,.1);border:none;border-radius:9px;font-size:26px;font-weight:300;cursor:pointer;color:#1a1a2e;display:flex;align-items:center;justify-content:center;transition:transform .28s cubic-bezier(.34,1.56,.64,1),background .2s;line-height:1;flex-shrink:0}
 .qa-toggle.open{transform:rotate(45deg);background:var(--orange);color:white}
-.qa-row-extra{display:none;gap:8px;padding:6px 0 2px}
-.qa-row-extra.open{display:flex}
-@keyframes qaPop{0%{opacity:0;transform:translateY(-10px) scale(.8)}100%{opacity:1;transform:translateY(0) scale(1)}}
-.qa-row-extra.open .qa-action-btn:nth-child(1){animation:qaPop .22s .00s cubic-bezier(.34,1.56,.64,1) both}
-.qa-row-extra.open .qa-action-btn:nth-child(2){animation:qaPop .22s .06s cubic-bezier(.34,1.56,.64,1) both}
-.qa-row-extra.open .qa-action-btn:nth-child(3){animation:qaPop .22s .12s cubic-bezier(.34,1.56,.64,1) both}
-.qa-action-btn{flex:1;padding:11px 6px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);font-size:22px;font-weight:600;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:56px;min-width:0}
-.qa-action-btn span.qa-lbl{font-size:11px;font-weight:600;color:var(--text);white-space:nowrap}
-.qa-notiz-row{display:none;gap:6px;padding:2px 0 4px}
-.qa-notiz-row.open{display:flex}
+/* ── SCHNELLAKTION-PANEL ── */
+.qa-panel{display:none;flex-direction:column;gap:8px;background:#fff;border:1.5px solid var(--accent);border-radius:11px;overflow:hidden;width:100%;box-sizing:border-box}
+.qa-panel.open{display:flex}
+@keyframes qaPanelIn{0%{opacity:0;transform:translateY(-6px)}100%{opacity:1;transform:translateY(0)}}
+.qa-panel.open{animation:qaPanelIn .2s ease both}
+.qa-panel-header{background:#e8ecff;padding:7px 11px;font-size:12px;font-weight:700;color:var(--accent);}
+.qa-panel-body{padding:8px 11px;display:flex;flex-direction:column;gap:8px}
+.qa-textarea{width:100%;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;padding:8px 10px;font-size:13px;color:#1a1a2e;background:#fafafa;resize:none;height:72px;font-family:inherit;outline:none}
+.qa-textarea:focus{border-color:var(--accent)}
+.qa-save-btn{width:100%;background:#2e7d32;color:white;border:none;border-radius:9px;padding:13px 10px;font-size:14px;font-weight:700;cursor:pointer;line-height:1.2}
+.qa-photo-label{font-size:11px;font-weight:700;color:#555;margin:0}
+.qa-thumb-row{display:flex;gap:6px;flex-wrap:wrap}
+.qa-thumb{width:48px;height:48px;background:#ddd;border-radius:7px;overflow:hidden;flex-shrink:0}
+.qa-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.qa-photo-btns{display:flex;gap:7px}
+.qa-photo-btn{flex:1;background:#f0f4ff;border:1.5px solid var(--accent);border-radius:9px;padding:10px 4px 8px;font-size:26px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;min-width:0}
+.qa-photo-btn span{font-size:11px;font-weight:700;color:var(--accent)}
 /* ── FOTOS ── */
 .foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
 .foto-thumb{position:relative;aspect-ratio:1;background:var(--bg3);border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border)}
@@ -2229,25 +2237,34 @@ function renderDetail(t){
       const running=isTimerRunningForTask(t.id);
       const ts=_loadTimerState();
       const savedDesc=(ts&&ts.taskId===t.id?ts.beschreibung:'')||'';
-      return '<div id="timerBar" class="timer-bar top'+(running?' running':'')+'" style="flex-direction:column;gap:6px;">'
-        +'<div style="display:flex;align-items:center;gap:8px;width:100%;">'
-          +'<div id="timerDisplay" class="timer-display'+(running?' running':'')+'" style="flex:1;min-width:0;">'+formatTimerFor(t.id)+'</div>'
+      const thumbsHtml=(t.fotos&&t.fotos.length
+        ?t.fotos.slice(-4).map(f=>'<div class="qa-thumb"><img src="'+escAttr(f.webViewLink||f.url||'')+'"></div>').join('')
+        :'')+'<div class="qa-thumb" style="background:#e8ecff;border:1.5px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--accent);">+</div>';
+      return '<div id="timerBar" class="timer-bar top'+(running?' running':'')+'">'
+        +'<div class="timer-top-row">'
+          +'<div id="timerDisplay" class="timer-display'+(running?' running':'')+'">'+formatTimerFor(t.id)+'</div>'
+          +'<button id="timerBtn" class="timer-btn '+(running?'stop':'start')+'" onclick="toggleMobileTimer(\''+escAttr(t.id)+'\')">'+(running?'⏹ Stopp':'▶ Start')+'</button>'
           +'<button id="qaToggleBtn" class="qa-toggle" onclick="toggleQuickActions()" title="Schnellaktionen">+</button>'
         +'</div>'
-        +'<div id="qaRowExtra" class="qa-row-extra">'
-          +'<button class="qa-action-btn" onclick="document.getElementById(\'fotoInputCamera\').click()">📷<span class="qa-lbl">Kamera</span></button>'
-          +'<button class="qa-action-btn" onclick="document.getElementById(\'fotoInputGallery\').click()">🖼<span class="qa-lbl">Galerie</span></button>'
-          +'<button class="qa-action-btn" id="qaNotizBtn" onclick="toggleQuickNotiz()">✏️<span class="qa-lbl">Notiz</span></button>'
+        +'<div id="qaPanel" class="qa-panel">'
+          +'<div class="qa-panel-header">Task: '+esc(t.title||'(ohne Titel)')+'</div>'
+          +'<div class="qa-panel-body">'
+            +'<textarea id="qaNotizInput" class="qa-textarea" placeholder="Notiz eingeben…" maxlength="400" autocomplete="off"></textarea>'
+            +'<button class="qa-save-btn" onclick="addQuickNotiz()">✓ Speichern mit Zeitstempel</button>'
+            +'<div>'
+              +'<p class="qa-photo-label">Hochgeladen ('+(t.fotos?t.fotos.length:0)+')</p>'
+              +'<div class="qa-thumb-row" id="qaThumbRow">'+thumbsHtml+'</div>'
+            +'</div>'
+            +'<div class="qa-photo-btns">'
+              +'<button class="qa-photo-btn" onclick="document.getElementById(\'fotoInputCamera\').click()">📷<span>Kamera</span></button>'
+              +'<button class="qa-photo-btn" onclick="document.getElementById(\'fotoInputGallery\').click()">🖼<span>Galerie</span></button>'
+            +'</div>'
+          +'</div>'
         +'</div>'
-        +'<div id="qaNotizRow" class="qa-notiz-row">'
-          +'<input type="text" id="qaNotizInput" placeholder="Schnellnotiz…" maxlength="200" autocomplete="off" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;min-height:44px;" onkeydown="if(event.key===\'Enter\')addQuickNotiz()">'
-          +'<button onclick="addQuickNotiz()" style="padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;min-height:44px;">✓</button>'
-        +'</div>'
-        +'<button id="timerBtn" class="timer-btn '+(running?'stop':'start')+'" onclick="toggleMobileTimer(\''+escAttr(t.id)+'\')" style="width:100%;">'+(running?'⏹ Stopp':'▶ Start')+'</button>'
         +'<input id="timerDesc" type="text" placeholder="Tätigkeitsbeschreibung vor dem Start eingeben…" maxlength="120"'
           +(running?' disabled':'')
           +' value="'+escAttr(savedDesc)+'"'
-          +' style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;min-height:44px;" autocomplete="off">'
+          +' style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.15);border:1px solid rgba(0,0,0,.15);border-radius:8px;padding:9px 11px;color:#1a1a2e;font-size:13px;outline:none;min-height:44px;" autocomplete="off">'
         +'</div>'
         +'<div style="display:flex;gap:8px;margin-bottom:10px;">'
         +(t.gdrive?'<a href="'+escAttr(t.gdrive)+'" target="_blank" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;">📷 Fotos in Drive</a>':'<span style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;display:flex;align-items:center;justify-content:center;">📷 kein Foto-Ordner</span>')
@@ -2679,20 +2696,14 @@ function renderNotizen(list){
   }).join('');
 }
 function toggleQuickActions(){
-  const row=document.getElementById('qaRowExtra');
+  const panel=document.getElementById('qaPanel');
   const btn=document.getElementById('qaToggleBtn');
-  const notizRow=document.getElementById('qaNotizRow');
-  if(!row)return;
-  const open=row.classList.toggle('open');
+  if(!panel)return;
+  const open=panel.classList.toggle('open');
   if(btn)btn.classList.toggle('open',open);
-  if(!open&&notizRow){notizRow.classList.remove('open');}
+  if(open){const inp=document.getElementById('qaNotizInput');if(inp)setTimeout(()=>inp.focus(),80);}
 }
-function toggleQuickNotiz(){
-  const row=document.getElementById('qaNotizRow');
-  if(!row)return;
-  const open=row.classList.toggle('open');
-  if(open){const inp=document.getElementById('qaNotizInput');if(inp)setTimeout(()=>inp.focus(),50);}
-}
+function toggleQuickNotiz(){}
 function addQuickNotiz(){
   const t=currentTask();if(!t)return;
   const inp=document.getElementById('qaNotizInput');
@@ -2702,8 +2713,10 @@ function addQuickNotiz(){
   const ts=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
   t.notizVerlauf.push({ts,text});
   inp.value='';
-  const nr=document.getElementById('qaNotizRow');
-  if(nr)nr.classList.remove('open');
+  const panel=document.getElementById('qaPanel');
+  const btn=document.getElementById('qaToggleBtn');
+  if(panel){panel.classList.remove('open');}
+  if(btn){btn.classList.remove('open');}
   _mOpenSections['Notizen']=true;
   forceSave();renderDetail(t);
 }
