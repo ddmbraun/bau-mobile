@@ -291,7 +291,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
    PTP Mobile – nutzt dieselbe workboard.json wie PTP
    ═══════════════════════════════════════════════ */
 const GDRIVE_CLIENT_ID='56419258975-2ri3eujer9p6saph1mesa5hihlcae1pl.apps.googleusercontent.com';
-const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly';
+const GDRIVE_SCOPE='https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly'; // Sync mit Desktop
 const TOKEN_KEY='ptp_gdrive_token_v1';  // Synchronisiert mit PC-Version
 const FILE_KEY='ptpm_file';
 const WORKSPACE_FOLDER_KEY='workspace_folder_id';  // Gleicher Key wie PC-Version
@@ -778,10 +778,10 @@ function _applyMobileFilter(data){
     if(k.startsWith('_'))continue;
     if(!Array.isArray(v))continue;
     // Whitelist aktiv → bekannte Boards anzeigen
-    // NEU: unbekannte Boards (neu vom Desktop) automatisch zur Whitelist hinzufügen statt zu verstecken
+    // Neue Boards vom Desktop automatisch zur Whitelist hinzufügen (nicht verstecken)
     if(hasWhitelist&&!mobileWhitelist.includes(k)){
-      mobileWhitelist.push(k); // Neues Desktop-Board → automatisch einblenden
-      console.info('[PTPm] Neues Board zur Whitelist hinzugefügt:',k);
+      mobileWhitelist.push(k);
+      console.info('[PTPm] Neues Desktop-Board automatisch eingeblendet:',k);
     }
     boards[k]=v;
   }
@@ -920,11 +920,7 @@ async function saveFile(){
                       if((lv===''||lv===null||lv===undefined)&&rv){mergedTask[f]=rv;}
                     }
                     // PC-exklusive Felder: Remote gewinnt immer (Mobile überschreibt sie nie)
-                    // PC-exklusive Felder die Mobile nie überschreiben darf:
-                    // ausfuehrungstermin/ortstermin = Termindaten nur vom Desktop gesetzt
-                    // tags = Kostenstelle, ausführungsdatum = Auftrag-erteilt-Datum
-                    // repNr/kundenNr/hausverwaltung/adresse/schadensbild = Baustellendaten
-                    const _pcOnly=['emailPdfs','emailOriginals','gmailLinks','links','checkliste','kontakte','repNr','kundenNr','auftragswert','gdriveOrdner','emailOrdner','bauOrdner','pruefberichte','ausfuehrungstermin','ortstermin','tags','ausführungsdatum','hausverwaltung','adresse','schadensbild'];
+                    const _pcOnly=['emailPdfs','emailOriginals','gmailLinks','links','repNr','kundenNr','auftragswert','gdriveOrdner','emailOrdner','bauOrdner','pruefberichte','ortstermin']; // checkliste/kontakte/tags/adressen werden in Mobile bearbeitet
                     for(const f of _pcOnly){if(rt[f]!==undefined)mergedTask[f]=rt[f];}
                     mergedTask.notizVerlauf=_mergeListByKey(rt.notizVerlauf,localTask.notizVerlauf,n=>((n.ts||'')+'|'+(n.text||'')));
                     mergedTask.zeitEntries=_mergeListByKey(rt.zeitEntries,localTask.zeitEntries,e=>((e.date||'')+'|'+(e.von||'')+'|'+(e.bis||'')+'|'+(e.beschreibung||'')));
@@ -2195,6 +2191,7 @@ function renderDetail(t){
             +['grün','orange','rot'].map(a=>'<option value="'+a+'"'+(a===(t.ampel||'grün')?' selected':'')+'>'+({'grün':'🟢','orange':'🟠','rot':'🔴'}[a])+'</option>').join('')
           +'</select></div></div>')
       +'<div class="field"><label>Ausführungsdatum</label><input type="date" value="'+escAttr(t.ausführungsdatum||'')+'" onchange="updateField(\'ausführungsdatum\',this.value)" autocomplete="off"></div>'
+      +'<div class="field"><label>Ausführungstermin (Ausführung geplant)</label><input type="date" value="'+escAttr(t.ausfuehrungstermin||'')+' onchange="updateField(\'ausfuehrungstermin\',this.value)" autocomplete="off"></div>'
       +'<div class="field"><label>Aktivität</label><select onchange="updateField(\'aktivitaet\',this.value)">'
         +'<option value=""'+(!(t.aktivitaet)?' selected':'')+'>— keine —</option>'
         +'<option value="anruf"'+(t.aktivitaet==='anruf'?' selected':'')+'>📞 Telefonanruf</option>'
