@@ -283,7 +283,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
   </div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer onload="onGsiLoaded()"></script>
+<script src="https://accounts.google.com/gsi/client" defer onload="onGsiLoaded()"></script>
 <link id="pannellumCSS" rel="stylesheet">
 <!-- piexif und pannellum werden erst bei Bedarf geladen -->
 <script>
@@ -498,7 +498,7 @@ function _mobDriveRenew(){
 function _scheduleGdriveRefresh(expiresIn){
   clearTimeout(_gdriveRefreshTimer);
   // 10 Minuten vor Ablauf warnen (statt 5 Min), damit Nutzer Zeit hat zu reagieren
-  const delay=Math.max(10000,(expiresIn-600))*1000;
+  const delay=Math.max(10000,(expiresIn-600)*1000); // Fix: Einheiten korrekt – zuerst *1000 (s→ms), dann Minimum
   _gdriveRefreshTimer=setTimeout(()=>{
     initTokenClient();
     if(!gdriveTokenClient)return;
