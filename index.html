@@ -113,6 +113,14 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .timer-btn{padding:6px 16px;border-radius:8px;font-weight:600;border:none;cursor:pointer;font-size:14px;min-height:34px}
 .timer-btn.start{background:var(--accent);color:white}
 .timer-btn.stop{background:var(--orange);color:white}
+.qa-toggle{background:rgba(0,0,0,.08);border:none;border-radius:8px;width:34px;min-height:34px;font-size:20px;font-weight:400;cursor:pointer;color:var(--text);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;line-height:1}
+.qa-toggle.open{transform:rotate(45deg);background:var(--orange);color:white}
+.qa-row-extra{display:none;gap:6px;padding:4px 0 2px}
+.qa-row-extra.open{display:flex}
+.qa-action-btn{flex:1;padding:9px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px}
+.qa-action-btn span.qa-lbl{font-size:10px;font-weight:500;color:var(--text2)}
+.qa-notiz-row{display:none;gap:6px;padding:2px 0 4px}
+.qa-notiz-row.open{display:flex}
 /* ── FOTOS ── */
 .foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
 .foto-thumb{position:relative;aspect-ratio:1;background:var(--bg3);border-radius:6px;overflow:hidden;cursor:pointer;border:1px solid var(--border)}
@@ -379,6 +387,8 @@ function parseMinutes(von,bis){try{if(!von||!bis)return 0;const[vh,vm]=von.split
 // ── GLOBALE ICON-SVGs (für Karten-Vorschau und Heute-View) ──
 const _SVG_PHONE='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.61 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-2.89-8.18A2 2 0 0 1 4.72 2.72h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.91 10.09a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
 const _SVG_PIN='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+// Baukran-Icon für Auftrag/Baustelle-Boards
+const _SVG_CRANE='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="22" x2="9" y2="7"/><line x1="1" y1="7" x2="21" y2="7"/><line x1="9" y1="4" x2="21" y2="7"/><line x1="1" y1="7" x2="9" y2="4"/><line x1="17" y1="7" x2="17" y2="16"/><path d="M15 16 q2 2 4 0"/><line x1="6" y1="22" x2="12" y2="22"/></svg>';
 
 // ── GRÖSSEN-SLIDER (wie im Desktop-Modal) ──
 const MSCALE_KEY='ptpm_detail_size';
@@ -661,9 +671,17 @@ function renderHeuteMobil(){
     var isOverdue=_dateVal<today;
     var isToday=_dateVal===today;
     var dcol=isOverdue?'#E24B4A':isToday?'#EF9F27':'#639922';
-    var _dateLabel=item.dateType==='ausf'?'Ausf. ':'Fällig ';
-    var dlabel=_dateLabel+fmtDue(_dateVal);
-    if(isOverdue){var d=diffDays(_dateVal);dlabel+=' · '+d+'d';}
+    var dlabel;
+    if(item.dateType==='ausf'){
+      dlabel='Ausf. '+fmtDue(_dateVal);
+    }else if(isOverdue){
+      var d=diffDays(_dateVal);
+      dlabel='Überfällig: '+fmtDue(_dateVal)+' ('+d+(d===1?' Tag':' Tage')+')';
+    }else if(isToday){
+      dlabel='Heute fällig: '+fmtDue(_dateVal);
+    }else{
+      dlabel='Fällig: '+fmtDue(_dateVal);
+    }
     badges+=(badges?' ':'')+' <span style="font-size:11px;color:'+dcol+';font-weight:600;white-space:nowrap;">'+dlabel+'</span>';
     var al=actionLine(t);
     return'<div onclick="openDetail(\''+escAttr(t.id)+'\')" '
@@ -2127,12 +2145,18 @@ function renderList(){
       :'';
     const showCardActions=!!(cardTelBtn||cardMapsBtn);
     return '<div class="task-card" onclick="openDetail(\''+escAttr(t.id)+'\')">'
-      +'<div class="task-card-title" style="color:var(--text)">'+(isNotizBoard?'✅ ':'🏗 ')+esc(t.title||'(ohne Titel)')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:4px;margin-bottom:3px;">'
+      +(isNotizBoard
+        ?'<span style="font-size:13px;line-height:1;">✅</span>'
+        :'<span style="display:inline-flex;align-items:center;flex-shrink:0;">'+_SVG_CRANE+'</span>')
+      +'<span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(currentBoard)+'</span>'
+      +'</div>'
+      +'<div class="task-card-title" style="color:var(--text)">'+esc(t.title||'(ohne Titel)')+'</div>'
       +'<div class="task-card-meta">'
       +(status?'<span class="badge status">'+esc(status)+'</span>':'')
       +(!isNotizBoard?'<span class="badge ampel-'+ampel+'">●</span>':'')
       +(ausf?'<span style="color:var(--text2)">📅 '+esc(ausf)+'</span>':'')
-      +(isRunning?'<span style="color:var(--orange);font-size:12px;font-weight:600;margin-left:auto">⏱ '+formatTimerFor(t.id)+'</span>':'')
+      +(isRunning?'<span style="color:var(--text);font-size:12px;font-weight:600;margin-left:auto">⏱ '+formatTimerFor(t.id)+'</span>':'')
       +'</div>'
       +(showCardActions
         ?'<div style="display:flex;align-items:center;gap:8px;padding:6px 0 2px;border-top:0.5px solid var(--border);margin-top:6px;">'
@@ -2205,6 +2229,16 @@ function renderDetail(t){
         +'<div style="display:flex;gap:8px;align-items:stretch;width:100%;min-height:44px;">'
           +'<div id="timerDisplay" class="timer-display'+(running?' running':'')+'">'+formatTimerFor(t.id)+'</div>'
           +'<button id="timerBtn" class="timer-btn '+(running?'stop':'start')+'" onclick="toggleMobileTimer(\''+escAttr(t.id)+'\')" style="flex-shrink:0;">'+(running?'⏹ Stopp':'▶ Start')+'</button>'
+          +'<button id="qaToggleBtn" class="qa-toggle" onclick="toggleQuickActions()" title="Schnellaktionen">+</button>'
+        +'</div>'
+        +'<div id="qaRowExtra" class="qa-row-extra">'
+          +'<button class="qa-action-btn" onclick="document.getElementById(\'fotoInputCamera\').click()">📷<span class="qa-lbl">Kamera</span></button>'
+          +'<button class="qa-action-btn" onclick="document.getElementById(\'fotoInputGallery\').click()">🖼<span class="qa-lbl">Galerie</span></button>'
+          +'<button class="qa-action-btn" id="qaNotizBtn" onclick="toggleQuickNotiz()">✏️<span class="qa-lbl">Notiz</span></button>'
+        +'</div>'
+        +'<div id="qaNotizRow" class="qa-notiz-row">'
+          +'<input type="text" id="qaNotizInput" placeholder="Schnellnotiz…" maxlength="200" autocomplete="off" style="flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;outline:none;min-height:40px;" onkeydown="if(event.key===\'Enter\')addQuickNotiz()">'
+          +'<button onclick="addQuickNotiz()" style="padding:8px 14px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:13px;font-weight:600;cursor:pointer;min-height:40px;">✓</button>'
         +'</div>'
         +'<input id="timerDesc" type="text" placeholder="Tätigkeitsbeschreibung vor dem Start eingeben…" maxlength="120"'
           +(running?' disabled':'')
@@ -2639,6 +2673,35 @@ function renderNotizen(list){
     const i=list.length-1-idx;
     return '<div class="notiz-entry"><span class="ts">'+esc(n.ts||'')+'</span>'+esc(n.text||'')+' <button class="rm-btn" style="float:right;height:26px;font-size:11px;padding:0 8px" onclick="removeNotiz('+i+')">✕</button></div>';
   }).join('');
+}
+function toggleQuickActions(){
+  const row=document.getElementById('qaRowExtra');
+  const btn=document.getElementById('qaToggleBtn');
+  const notizRow=document.getElementById('qaNotizRow');
+  if(!row)return;
+  const open=row.classList.toggle('open');
+  if(btn)btn.classList.toggle('open',open);
+  if(!open&&notizRow){notizRow.classList.remove('open');}
+}
+function toggleQuickNotiz(){
+  const row=document.getElementById('qaNotizRow');
+  if(!row)return;
+  const open=row.classList.toggle('open');
+  if(open){const inp=document.getElementById('qaNotizInput');if(inp)setTimeout(()=>inp.focus(),50);}
+}
+function addQuickNotiz(){
+  const t=currentTask();if(!t)return;
+  const inp=document.getElementById('qaNotizInput');
+  const text=(inp?inp.value:'').trim();
+  if(!text)return;
+  if(!t.notizVerlauf)t.notizVerlauf=[];
+  const ts=new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  t.notizVerlauf.push({ts,text});
+  inp.value='';
+  const nr=document.getElementById('qaNotizRow');
+  if(nr)nr.classList.remove('open');
+  _mOpenSections['Notizen']=true;
+  forceSave();renderDetail(t);
 }
 function addNotiz(){
   const t=currentTask();if(!t)return;
