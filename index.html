@@ -376,6 +376,10 @@ function generateId(){return 't_'+Date.now()+'_'+Math.random().toString(36).subs
 function toast(msg,kind){const t=document.createElement('div');t.className='toast'+(kind?' '+kind:'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{try{t.remove();}catch(e){console.warn('[PTP-Mobile]',e);}},2500);}
 function parseMinutes(von,bis){try{if(!von||!bis)return 0;const[vh,vm]=von.split(':').map(Number);const[bh,bm]=bis.split(':').map(Number);const d=(bh*60+bm)-(vh*60+vm);return d>0?d:0;}catch(e){return 0;}}
 
+// ── GLOBALE ICON-SVGs (für Karten-Vorschau und Heute-View) ──
+const _SVG_PHONE='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.61 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-2.89-8.18A2 2 0 0 1 4.72 2.72h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.91 10.09a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
+const _SVG_PIN='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
 // ── GRÖSSEN-SLIDER (wie im Desktop-Modal) ──
 const MSCALE_KEY='ptpm_detail_size';
 const MSIZEBAR_KEY='ptpm_sizebar_open';
@@ -613,8 +617,8 @@ function renderHeuteMobil(){
   var zoom=115;
   try{var z=parseInt(localStorage.getItem(HZKEY)||'115',10);if(z>=80&&z<=160)zoom=z;}catch(e){}
 
-  var phoneIcon='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 11.61 19a19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-2.89-8.18A2 2 0 0 1 4.72 2.72h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.91 10.09a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>';
-  var pinIcon='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+  var phoneIcon=_SVG_PHONE;
+  var pinIcon=_SVG_PIN;
 
   function actionLine(t){
     var isAnruf=t.aktivitaet==='anruf';
@@ -2110,14 +2114,35 @@ function renderList(){
     const status=t.status||'';
     const ausf=t.ausführungsdatum?formatDate(t.ausführungsdatum):'';
     const isRunning=t.id===runningTaskId;
+    // Tel/Maps-Buttons für Karten-Vorschau
+    const cardTelK=(t.kontakte||[]).find(c=>c.tel);
+    const cardAdr=(t.adresse||'').trim();
+    const cardTelBtn=cardTelK
+      ?'<a href="tel:'+encodeURIComponent(cardTelK.tel)+'" onclick="event.stopPropagation()" '
+        +'style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#1a6fc4;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">'+_SVG_PHONE+'</a>'
+      :'';
+    const cardMapsBtn=cardAdr
+      ?'<a href="https://maps.google.com/?q='+encodeURIComponent(cardAdr)+'" target="_blank" onclick="event.stopPropagation()" '
+        +'style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:#2e7d32;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;">'+_SVG_PIN+'</a>'
+      :'';
+    const showCardActions=!!(cardTelBtn||cardMapsBtn);
     return '<div class="task-card" onclick="openDetail(\''+escAttr(t.id)+'\')">'
-      +'<div class="task-card-title">'+(isNotizBoard?'✅ ':'🏗 ')+esc(t.title||'(ohne Titel)')+'</div>'
+      +'<div class="task-card-title" style="color:var(--text)">'+(isNotizBoard?'✅ ':'🏗 ')+esc(t.title||'(ohne Titel)')+'</div>'
       +'<div class="task-card-meta">'
-      +(status&&!currentStatus?'<span class="badge status">'+esc(status)+'</span>':'')
+      +(status?'<span class="badge status">'+esc(status)+'</span>':'')
       +(!isNotizBoard?'<span class="badge ampel-'+ampel+'">●</span>':'')
-      +(ausf?'<span>📅 '+esc(ausf)+'</span>':'')
-      +(isRunning?'<span class="task-timer-badge" style="color:var(--orange);font-size:12px;font-weight:600;margin-left:auto">⏱ '+formatTimerFor(t.id)+'</span>':'')
-      +'</div></div>';
+      +(ausf?'<span style="color:var(--text2)">📅 '+esc(ausf)+'</span>':'')
+      +(isRunning?'<span style="color:var(--orange);font-size:12px;font-weight:600;margin-left:auto">⏱ '+formatTimerFor(t.id)+'</span>':'')
+      +'</div>'
+      +(showCardActions
+        ?'<div style="display:flex;align-items:center;gap:8px;padding:6px 0 2px;border-top:0.5px solid var(--border);margin-top:6px;">'
+          +(cardTelK&&cardTelK.name
+            ?'<span style="flex:1;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+esc(cardTelK.name)+'</span>'
+            :'<span style="flex:1"></span>')
+          +cardTelBtn+cardMapsBtn
+          +'</div>'
+        :'')
+      +'</div>';
   }).join('');
   if(runningTaskId)_startListTickLoop();else _stopListTickLoop();
 }
