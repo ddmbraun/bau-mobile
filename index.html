@@ -221,6 +221,7 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
     <div class="hdr-title">PTP Mobile</div>
     <button class="hdr-btn icon theme-toggle-btn" onclick="toggleTheme()" title="Hell/Dunkel wechseln">☀️</button>
     <button class="hdr-btn icon" id="refreshBtn" onclick="refreshData()" title="Neu laden – lange drücken = PC-Stand erzwingen">🔄</button>
+    <button class="hdr-btn" onclick="_openStammblattMob()" title="Stammblatt öffnen" style="font-size:12px;font-weight:700">📋</button>
     <button class="hdr-btn icon" onclick="openSettings()" title="Einstellungen">⚙️</button>
   </div>
   <div class="board-section">
@@ -2289,7 +2290,7 @@ function renderDetail(t){
         +'<option value="anruf"'+(t.aktivitaet==='anruf'?' selected':'')+'>📞 Telefonanruf</option>'
         +'<option value="besichtigung"'+(t.aktivitaet==='besichtigung'?' selected':'')+'>📍 Besichtigungstermin</option>'
       +'</select></div>'
-      +(!isNotiz?'<div class="field"><label>Adresse</label><div class="field-row" style="gap:6px"><input type="text" value="'+escAttr(t.adresse||'')+'" placeholder="Straße, PLZ Ort" oninput="updateField(\'adresse\',this.value);updateNavBtn()" autocomplete="off"><a id="navBtn" class="nav-link'+(t.adresse?'':' disabled')+'" href="'+(t.adresse?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(t.adresse):'#')+'" target="_blank">🗺️</a></div></div>':'')
+      +(!isNotiz?'<div class="field"><label>Adresse</label><div class="field-row" style="gap:6px"><input type="text" value="'+escAttr(t.adresse||'')+'" placeholder="Straße, PLZ Ort" oninput="updateField(\'adresse\',this.value);updateNavBtn()" onblur="_autoFillSbOrdner()" autocomplete="off"><a id="navBtn" class="nav-link'+(t.adresse?'':' disabled')+'" href="'+(t.adresse?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(t.adresse):'#')+'" target="_blank">🗺️</a></div></div>':'')
       +(!isNotiz?'<div class="field"><label>Hausverwaltung</label><input type="text" value="'+escAttr(t.hausverwaltung||'')+'" oninput="updateField(\'hausverwaltung\',this.value)" autocomplete="off"></div>':'')
       +'<div class="field"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><label style="margin:0">'+(isNotiz?'Beschreibung':'Schaden / Beschreibung')+'</label><button type="button" class="inline-btn" style="padding:4px 10px;font-size:11px" onclick="toggleExpandTA(this.parentElement.nextElementSibling)">🔍 vergrößern</button></div><textarea id="mSchTA" class="expandable-ta" oninput="updateField(\'schadensbild\',this.value)" autocomplete="off">'+esc(t.schadensbild||'')+'</textarea></div>'
     +'</div></div>'
@@ -2331,6 +2332,12 @@ function renderDetail(t){
         +(t.gdriveOrdner
           ? '<a href="'+escAttr(t.gdriveOrdner)+'" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--accent);font-size:13px;font-weight:500">📁 Projektordner öffnen</a>'
           : '<div style="padding:8px 10px;background:var(--bg3);border:1px dashed var(--border);border-radius:8px;color:var(--text2);font-size:12px">Noch nicht verknüpft – bitte am Desktop unter Verknüpfungen eintragen.</div>')
+      +'</div>'
+      +'<div class="field"><label>📄 Stammblatt PDF <span style="font-weight:400;color:var(--text2);font-size:10px">Drive-Ordner des Objekts — einmal eintragen, dauerhaft gespeichert</span></label>'
+        +'<div style="display:flex;gap:6px;align-items:center">'
+          +'<input type="url" value="'+escAttr(t.sbPdfOrdner||'')+'" placeholder="https://drive.google.com/drive/folders/…" style="flex:1;font-size:12px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text)" oninput="updateField(\'sbPdfOrdner\',this.value);_saveSbOrdnerForAdr()" autocomplete="off">'
+          +(t.sbPdfOrdner?'<button onclick="_openSbPdfOrdner()" style="padding:8px 12px;border-radius:8px;background:#15803d;color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;flex-shrink:0;">📂</button>':'')
+        +'</div>'
       +'</div>'
     +'</div></div>'
     // ── E-MAIL ORIGINALE (Karten-Layout, Inhalt ladbar) ──
@@ -2421,6 +2428,38 @@ function updateField(field,value){
   const t=currentTask();if(!t)return;
   t[field]=value;scheduleSave();
 }
+
+// ── Stammblatt-Ordner: adressbasierter localStorage-Cache ─────────────────
+function _sbOrdnerKey(adr){ return 'sbOrdner::'+((adr||'').trim().toLowerCase()); }
+function _saveSbOrdnerForAdr(){
+  var t=currentTask(); if(!t) return;
+  var adr=(t.adresse||'').trim();
+  var url=(t.sbPdfOrdner||'').trim();
+  if(!adr||!url) return;
+  try{ localStorage.setItem(_sbOrdnerKey(adr), url); } catch(e){}
+}
+function _autoFillSbOrdner(){
+  var t=currentTask(); if(!t) return;
+  if((t.sbPdfOrdner||'').trim()) return;
+  var adr=(t.adresse||'').trim();
+  if(!adr) return;
+  try{
+    var saved=localStorage.getItem(_sbOrdnerKey(adr));
+    if(saved){ t.sbPdfOrdner=saved; scheduleSave(); renderDetail(currentTaskId); }
+  }catch(e){}
+}
+function _openSbPdfOrdner(){
+  var t=currentTask(); if(!t) return;
+  var url=(t.sbPdfOrdner||'').trim();
+  if(url) window.open(url,'_blank');
+  else alert('Bitte zuerst den Drive-Ordner eintragen — er wird dann für diese Adresse gespeichert.');
+}
+function _openStammblattMob(){
+  var isGithub=window.location.hostname.includes('github.io');
+  var url=isGithub?'https://ddmbraun.github.io/bau-doku/stammblatt.html':'../stammblatt.html';
+  window.open(url,'_blank');
+}
+// ──────────────────────────────────────────────────────────────────────────
 function updateTags(value){
   const t=currentTask();if(!t)return;
   t.tags=value.split(',').map(s=>s.trim()).filter(Boolean);
