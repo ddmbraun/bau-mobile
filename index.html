@@ -57,6 +57,13 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 .badge.ampel-grün{background:rgba(74,222,128,.15);border-color:var(--green);color:var(--green)}
 .badge.ampel-orange{background:rgba(251,146,60,.15);border-color:var(--orange);color:var(--orange)}
 .badge.ampel-rot{background:rgba(248,113,113,.15);border-color:var(--red);color:var(--red)}
+.m-dbox-row{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px;}
+.m-dbox{display:flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;border:0.5px solid var(--border);background:var(--bg3);}
+.m-dbox.miss{background:#FCEBEB;border-color:#F7C1C1;}
+.m-dbox-dot{width:6px;height:6px;border-radius:50%;border:1.5px solid;flex-shrink:0;}
+.m-dbox-lbl{font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap;}
+.m-dbox-val{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;padding-left:2px;}
+.m-dbox-val.miss{color:#A32D2D;}
 .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:28px;background:var(--accent);color:white;border:none;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:20}
 .fab:active{transform:scale(.95)}
 .empty{text-align:center;color:var(--text2);padding:40px 20px;font-size:14px}
@@ -2171,6 +2178,16 @@ function renderList(){
       +(ausf?'<span style="color:var(--text2)">📅 '+esc(ausf)+'</span>':'')
       +(isRunning?'<span style="color:var(--text);font-size:12px;font-weight:600;margin-left:auto">⏱ '+formatTimerFor(t.id)+'</span>':'')
       +'</div>'
+      +(()=>{
+        const _df=iso=>{if(!iso)return'';try{const d=new Date(iso);return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});}catch(_){return iso;}};
+        const ov=t.due&&isOverdue(t.due);
+        const boxes=[
+          t.ausführungsdatum?'<div class="m-dbox"><div class="m-dbox-dot" style="background:#FAEEDA;border-color:#854F0B;"></div><div class="m-dbox-lbl">Erteilt</div><div class="m-dbox-val">'+_df(t.ausführungsdatum)+'</div></div>':'',
+          t.ausfuehrungstermin?'<div class="m-dbox"><div class="m-dbox-dot" style="background:#C0DD97;border-color:#3B6D11;"></div><div class="m-dbox-lbl">Ausführung</div><div class="m-dbox-val">'+_df(t.ausfuehrungstermin)+'</div></div>':'',
+          t.due?'<div class="m-dbox'+(ov?' miss':'')+'"><div class="m-dbox-dot" style="background:'+(ov?'#F7C1C1':'#FAEEDA')+';border-color:'+(ov?'#A32D2D':'#854F0B')+';"></div><div class="m-dbox-lbl">Erledigen bis</div><div class="m-dbox-val'+(ov?' miss':'')+'">'+_df(t.due)+'</div></div>':'',
+        ].filter(Boolean).join('');
+        return boxes?'<div class="m-dbox-row">'+boxes+'</div>':'';
+      })()
       +(showCardActions
         ?'<div style="display:flex;align-items:center;gap:8px;padding:6px 0 2px;border-top:0.5px solid var(--border);margin-top:6px;">'
           +(cardTelK&&cardTelK.name
@@ -2271,6 +2288,20 @@ function renderDetail(t){
         +'<div style="display:flex;gap:8px;margin-bottom:10px;">'
         +(t.gdrive?'<a href="'+escAttr(t.gdrive)+'" target="_blank" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;">📷 Fotos in Drive</a>':'<span style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;display:flex;align-items:center;justify-content:center;">📷 kein Foto-Ordner</span>')
         +(t.gdriveOrdner?'<a href="'+escAttr(t.gdriveOrdner)+'" target="_blank" style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:5px;">📎 Anhänge in Drive</a>':'<span style="flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;display:flex;align-items:center;justify-content:center;">📎 kein Anhang-Ordner</span>')
+        +'</div>';
+    })()
+    // ── ZEIT/TERMIN BADGE ──
+    +(()=>{
+      const _pm=(von,bis)=>{try{if(!von||!bis)return 0;const[vh,vm]=von.split(':').map(Number);const[bh,bm]=bis.split(':').map(Number);const d=(bh*60+bm)-(vh*60+vm);return d>0?d:0;}catch(_){return 0;}};
+      const _fmt=m=>{const h=Math.floor(m/60);const mm=m%60;return(h>0?h+'h ':'')+mm+' min';};
+      const zeitMin=(t.zeitEntries||[]).reduce((s,e)=>s+_pm(e.von||'',e.bis||''),0);
+      const termMin=(t.ausserhausTermine||[]).reduce((s,e)=>s+_pm(e.von||'',e.bis||''),0);
+      const gesMin=zeitMin+termMin;
+      if(!zeitMin&&!termMin)return '';
+      return '<div style="display:flex;align-items:stretch;border:0.5px solid #C0DD97;border-radius:8px;overflow:hidden;font-size:calc(12px * var(--m-scale,1));font-weight:600;white-space:nowrap;margin:0 0 8px;">'
+        +(zeitMin?'<span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#FAEEDA;border-right:0.5px solid #FAC775;"><span style="color:#854F0B;">⏱ Zeiterf.</span><b style="color:#633806;padding-left:4px;">'+_fmt(zeitMin)+'</b></span>':'')
+        +(termMin?'<span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#E6F1FB;border-right:0.5px solid #B5D4F4;"><span style="color:#185FA5;">📅 Termine</span><b style="color:#0C447C;padding-left:4px;">'+_fmt(termMin)+'</b></span>':'')
+        +(gesMin?'<span style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#EAF3DE;"><span style="color:#3B6D11;">∑ Gesamt</span><b style="color:#27500A;padding-left:4px;">'+_fmt(gesMin)+'</b></span>':'')
         +'</div>';
     })()
     // ── STAMMDATEN ──
