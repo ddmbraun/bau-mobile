@@ -2122,6 +2122,9 @@ function renderStatusBar(){
     }).join('');
 }
 function renderList(){
+  // Sicherstellen dass taskList sichtbar ist (z.B. nach Heute-View)
+  const _tl=document.getElementById('taskList');
+  if(_tl&&_tl.style.display==='none')_tl.style.display='';
   renderBoardBar();
   renderStatusBar();
   const rawQ=(document.getElementById('searchInput')?.value||'');
@@ -2132,7 +2135,8 @@ function renderList(){
   const list=document.getElementById('taskList');
   const tasks=boards[currentBoard]||[];
   // Status-Filter
-  let filtered=currentStatus?tasks.filter(t=>(t.status||'')===currentStatus):tasks;
+  const _csTrim=currentStatus.trim();
+  let filtered=_csTrim?tasks.filter(t=>(t.status||'').trim()===_csTrim):tasks;
   // Suche: alle Wörter müssen irgendwo auftauchen (Groß-/Kleinschreibung egal)
   if(qWords.length){
     filtered=filtered.filter(t=>{
@@ -2147,7 +2151,8 @@ function renderList(){
   const timerState=_loadTimerState();
   const runningTaskId=timerState?timerState.taskId:null;
   const isNotizBoard=(boardTypes[currentBoard]||'baustelle')==='notiz';
-  list.innerHTML=filtered.map(t=>{
+  if(_tl)_tl.scrollTop=0;
+  list.innerHTML=filtered.map(t=>{ try {
     const ampel=t.ampel||'grün';
     const status=t.status||'';
     const ausf=t.ausführungsdatum?formatDate(t.ausführungsdatum):'';
@@ -2197,6 +2202,7 @@ function renderList(){
           +'</div>'
         :'')
       +'</div>';
+  } catch(_e){ console.error('[renderList]',t&&t.id,_e); return '<div class="task-card" style="color:var(--red)">⚠ '+esc((t&&t.title)||'?')+'</div>'; }
   }).join('');
   if(runningTaskId)_startListTickLoop();else _stopListTickLoop();
 }
@@ -2257,7 +2263,7 @@ function renderDetail(t){
       const ts=_loadTimerState();
       const savedDesc=(ts&&ts.taskId===t.id?ts.beschreibung:'')||'';
       const thumbsHtml=(t.fotos&&t.fotos.length
-        ?t.fotos.slice(-4).map(f=>'<div class="qa-thumb"><img src="'+escAttr(f.webViewLink||f.url||'')+'"></div>').join('')
+        ?t.fotos.slice(-4).map(f=>'<div class="qa-thumb"><img src="'+escAttr(f.thumbnail||(f.driveId?'https://drive.google.com/thumbnail?id='+f.driveId+'&sz=w400':''))+'"></div>').join('')
         :'')+'<div class="qa-thumb" style="background:#e8ecff;border:1.5px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--accent);">+</div>';
       return '<div id="timerBar" class="timer-bar top'+(running?' running':'')+'">'
         +'<div class="timer-top-row">'
@@ -3140,7 +3146,8 @@ async function openFotoFullscreen(i){
   const viewUrl=_vid?'https://drive.google.com/file/d/'+_vid+'/view':(f.url||'');
   // Erst Lightbox öffnen (mit Cache-Hit, falls vorhanden), dann ggf. nachladen.
   const cached=_vid?_fotoBlobCache.get(_vid):null;
-  openLightbox(cached||'',f.editedName||f.name||'Foto',viewUrl,{fotoIdx:i,caption:f.caption||''});
+  const _thumbFb=f.thumbnail||(f.driveId?'https://drive.google.com/thumbnail?id='+f.driveId+'&sz=w400':'');
+  openLightbox(cached||_thumbFb,f.editedName||f.name||'Foto',viewUrl,{fotoIdx:i,caption:f.caption||''});
   if(!cached&&_vid){
     const url=await _fetchFotoBlob(_vid);
     if(url){
